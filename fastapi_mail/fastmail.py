@@ -116,7 +116,7 @@ message = MessageSchema(
 
         async with Connection(self.config) as session:
             if not self.config.SUPPRESS_SEND:
-                await session.session.send_message(msg)
+                session.session.send_message(msg)
 
             email_dispatched.send(msg)
 
