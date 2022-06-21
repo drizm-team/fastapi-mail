@@ -1,7 +1,13 @@
-
 # Fastapi-mail
 
 The fastapi-mail simple lightweight mail system, sending emails and attachments(individual && bulk)
+
+**WARNING!**
+
+This is a uvicorn compatible fork of the original library, which ditches aiosmtplib due to
+it using asyncio Locks, which breaks down with uvicorn + gunicorn (for some reason).
+
+This means that the sending logic in this library is synchronous in order to ensure functionality.
 
 
 [![MIT licensed](https://img.shields.io/github/license/sabuhish/fastapi-mail)](https://raw.githubusercontent.com/sabuhish/fastapi-mail/master/LICENSE)

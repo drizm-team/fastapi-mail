@@ -1,4 +1,6 @@
-import aiosmtplib
+import smtplib
+from ssl import SSLContext, CERT_REQUIRED
+
 from pydantic import BaseSettings as Settings
 
 from fastapi_mail.config import ConnectionConfig
@@ -39,23 +41,33 @@ conf = Connection(
 
     async def __aexit__(self, exc_type, exc, tb):  # closing the connection
         if not self.settings.get('SUPPRESS_SEND'):   # for test environ
-            await self.session.quit()
+            self.session.quit()
 
     async def _configure_connection(self):
         try:
-            self.session = aiosmtplib.SMTP(
-                hostname=self.settings.get('MAIL_SERVER'),
-                port=self.settings.get('MAIL_PORT'),
-                use_tls=self.settings.get('MAIL_SSL'),
-                start_tls=self.settings.get('MAIL_TLS'),
-                validate_certs=self.settings.get('VALIDATE_CERTS'),
-            )
+            validate_certs = self.settings.get('VALIDATE_CERTS')
+            ssl_context = SSLContext()
+            if validate_certs:
+                ssl_context.check_hostname = bool(validate_certs)
+                ssl_context.verify_mode = CERT_REQUIRED
+            if self.settings.get('MAIL_SSL'):
+                self.session = smtplib.SMTP_SSL(
+                    self.settings.get('MAIL_SERVER'),
+                    port=self.settings.get('MAIL_PORT')
+                )
+            else:
+                self.session = smtplib.SMTP(
+                    self.settings.get('MAIL_SERVER'),
+                    port=self.settings.get('MAIL_PORT')
+                )
+            if self.settings.get('MAIL_TLS'):
+                self.session.starttls(context=ssl_context)
 
-            if not self.settings.get('SUPPRESS_SEND'):   # for test environ
-                await self.session.connect()
+            if not self.settings.get('SUPPRESS_SEND'):
+                self.session.connect()
 
                 if self.settings.get('USE_CREDENTIALS'):
-                    await self.session.login(
+                    self.session.login(
                         self.settings.get('MAIL_USERNAME'), self.settings.get('MAIL_PASSWORD')
                     )
 
