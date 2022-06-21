@@ -1,5 +1,6 @@
 import logging
 import smtplib
+import certifi
 from ssl import SSLContext, CERT_REQUIRED
 
 from pydantic import BaseSettings as Settings
@@ -54,6 +55,7 @@ conf = Connection(
                 logger.debug("'VALIDATE_CERTS' set, configuring SSL-Context.")
                 ssl_context.check_hostname = bool(validate_certs)
                 ssl_context.verify_mode = CERT_REQUIRED
+                ssl_context.load_verify_locations(cafile=certifi.where())
             if self.settings.get('MAIL_SSL'):
                 logger.debug("'MAIL_SSL' set, configuring SMTP-Client with implicit TLS.")
                 self.session = smtplib.SMTP_SSL(

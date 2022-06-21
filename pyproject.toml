@@ -30,6 +30,7 @@ httpx = "0.*"
 blinker = "^1.4"
 fakeredis = "^1.*"
 python-multipart = "^0.0.5"
+certifi = "^2022.6.15"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"
