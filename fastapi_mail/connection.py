@@ -1,8 +1,8 @@
 import logging
 import smtplib
-import certifi
-from ssl import SSLContext, CERT_REQUIRED
+from ssl import CERT_REQUIRED, create_default_context
 
+import certifi
 from pydantic import BaseSettings as Settings
 
 from fastapi_mail.config import ConnectionConfig
@@ -50,7 +50,7 @@ conf = Connection(
     async def _configure_connection(self):
         try:
             validate_certs = self.settings.get('VALIDATE_CERTS')
-            ssl_context = SSLContext()
+            ssl_context = create_default_context()
             if validate_certs:
                 logger.debug("'VALIDATE_CERTS' set, configuring SSL-Context.")
                 ssl_context.check_hostname = bool(validate_certs)
@@ -70,16 +70,14 @@ conf = Connection(
                 )
             if self.settings.get('MAIL_TLS'):
                 logger.debug("'MAIL_TLS' set, beginning STARTTLS.")
+                self.session.ehlo()
                 self.session.starttls(context=ssl_context)
                 logger.debug("STARTTLS accepted.")
 
             if not self.settings.get('SUPPRESS_SEND'):
-                logger.debug("Attempting Connection...")
-                self.session.connect()
-                logger.debug("Connection successful!")
-
                 if self.settings.get('USE_CREDENTIALS'):
                     logger.debug("'USE_CREDENTIALS' set, logging in using credentials.")
+                    self.session.ehlo()
                     self.session.login(
                         self.settings.get('MAIL_USERNAME'), self.settings.get('MAIL_PASSWORD')
                     )
